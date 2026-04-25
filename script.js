@@ -1,7 +1,7 @@
 // ============================================================
 // CONFIGURATION — Update this after deploying your Apps Script
 // ============================================================
-const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_DEPLOYMENT_URL_HERE';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzdpo8xEP4CiKWuZzqT3bW5nPST-X3B6F4b_Pl5n9UlzVbNCkdZ9Xm2uMXDda9mkV-4/exec';
 
 // ============================================================
 // QUIZ QUESTIONS — Replace these with your actual questions
@@ -190,17 +190,15 @@ function renderQuestion() {
   q.options.forEach(opt => {
     const selected = state.answers[state.currentQuestion] === opt.label;
     const div = document.createElement('div');
-    div.className = `option-card cursor-pointer border-2 rounded-xl p-4 flex items-center gap-4 ${
-      selected
+    div.className = `option-card cursor-pointer border-2 rounded-xl p-4 flex items-center gap-4 ${selected
         ? 'selected border-saffron-400 bg-saffron-50'
         : 'border-gray-200 hover:border-saffron-300 bg-white'
-    }`;
+      }`;
     div.onclick = () => selectOption(opt.label);
     div.innerHTML = `
-      <span class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
-        selected
-          ? 'bg-saffron-500 text-white'
-          : 'bg-gray-100 text-gray-600'
+      <span class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${selected
+        ? 'bg-saffron-500 text-white'
+        : 'bg-gray-100 text-gray-600'
       }">${opt.label}</span>
       <span class="text-gray-800 text-lg">${opt.text}</span>
     `;
@@ -436,9 +434,8 @@ function renderBreakdown(data) {
     const correctOptionText = q.options.find(o => o.label === correctAnswer)?.text || correctAnswer;
 
     const div = document.createElement('div');
-    div.className = `rounded-xl border-2 p-4 animate-fade-in ${
-      isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
-    }`;
+    div.className = `rounded-xl border-2 p-4 animate-fade-in ${isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
+      }`;
     div.style.animationDelay = `${i * 0.05}s`;
 
     div.innerHTML = `
@@ -456,9 +453,8 @@ function renderBreakdown(data) {
       </div>
       <div class="flex items-center gap-2">
         <div class="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
-          <div class="h-full rounded-full animate-width-grow ${
-            pctCorrect >= 70 ? 'bg-green-400' : pctCorrect >= 40 ? 'bg-yellow-400' : 'bg-red-400'
-          }" style="width: ${pctCorrect}%; animation-delay: ${i * 0.05 + 0.3}s;"></div>
+          <div class="h-full rounded-full animate-width-grow ${pctCorrect >= 70 ? 'bg-green-400' : pctCorrect >= 40 ? 'bg-yellow-400' : 'bg-red-400'
+      }" style="width: ${pctCorrect}%; animation-delay: ${i * 0.05 + 0.3}s;"></div>
         </div>
         <span class="text-xs text-gray-500 w-12 text-right">${pctCorrect}% correct</span>
       </div>
