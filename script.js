@@ -115,7 +115,6 @@ const QUESTIONS = [
 // ============================================================
 const state = {
   studentName: '',
-  currentQuestion: 0,
   answers: {},  // { 0: "A", 1: "C", ... }
 };
 
@@ -127,14 +126,6 @@ function showSection(sectionId) {
     document.getElementById(id).classList.add('section-hidden');
   });
   document.getElementById(sectionId).classList.remove('section-hidden');
-
-  // Show/hide progress bar
-  const progressContainer = document.getElementById('progress-container');
-  if (sectionId === 'quiz-section') {
-    progressContainer.classList.remove('section-hidden');
-  } else {
-    progressContainer.classList.add('section-hidden');
-  }
 }
 
 // ============================================================
@@ -152,12 +143,10 @@ function startQuiz() {
   }
 
   state.studentName = name;
-  state.currentQuestion = 0;
   state.answers = {};
 
   showSection('quiz-section');
-  renderQuestion();
-  buildQuestionDots();
+  renderAllQuestions();
 }
 
 // Allow pressing Enter on name input
@@ -169,100 +158,66 @@ document.getElementById('student-name').addEventListener('keydown', (e) => {
 });
 
 // ============================================================
-// QUIZ FLOW
+// QUIZ FLOW — All questions at once
 // ============================================================
-function renderQuestion() {
-  const q = QUESTIONS[state.currentQuestion];
-  const total = QUESTIONS.length;
-
-  // Update counter
-  document.getElementById('question-counter').textContent = `Question ${state.currentQuestion + 1} of ${total}`;
-
-  // Update progress bar
-  document.getElementById('progress-bar').style.width = `${((state.currentQuestion + 1) / total) * 100}%`;
-
-  // Update question text
-  document.getElementById('question-text').textContent = q.text;
-
-  // Render options
-  const container = document.getElementById('options-container');
+function renderAllQuestions() {
+  const container = document.getElementById('all-questions-container');
   container.innerHTML = '';
-  q.options.forEach(opt => {
-    const selected = state.answers[state.currentQuestion] === opt.label;
-    const div = document.createElement('div');
-    div.className = `option-card cursor-pointer border-2 rounded-xl p-4 flex items-center gap-4 ${selected
-        ? 'selected border-saffron-400 bg-saffron-50'
-        : 'border-gray-200 hover:border-saffron-300 bg-white'
-      }`;
-    div.onclick = () => selectOption(opt.label);
-    div.innerHTML = `
-      <span class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${selected
-        ? 'bg-saffron-500 text-white'
-        : 'bg-gray-100 text-gray-600'
-      }">${opt.label}</span>
-      <span class="text-gray-800 text-lg">${opt.text}</span>
+
+  QUESTIONS.forEach((q, i) => {
+    const card = document.createElement('div');
+    card.className = 'bg-white rounded-2xl shadow-lg p-6 sm:p-8 animate-fade-in-up';
+    card.style.animationDelay = `${i * 0.05}s`;
+    card.id = `question-card-${i}`;
+
+    // Question header + text
+    let html = `
+      <div class="flex items-start gap-3 mb-5">
+        <span class="flex-shrink-0 w-8 h-8 rounded-full bg-saffron-100 text-saffron-700 flex items-center justify-center text-sm font-bold">${i + 1}</span>
+        <h2 class="text-lg sm:text-xl font-semibold text-gray-800 leading-relaxed">${q.text}</h2>
+      </div>
+      <div class="space-y-2.5 pl-11" id="options-${i}">
     `;
-    container.appendChild(div);
+
+    q.options.forEach(opt => {
+      html += `
+        <div
+          class="option-card cursor-pointer border-2 border-gray-200 hover:border-saffron-300 bg-white rounded-xl p-3.5 flex items-center gap-3"
+          data-question="${i}" data-label="${opt.label}"
+          onclick="selectOption(${i}, '${opt.label}')"
+        >
+          <span class="flex-shrink-0 w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-sm font-bold" id="badge-${i}-${opt.label}">${opt.label}</span>
+          <span class="text-gray-800">${opt.text}</span>
+        </div>
+      `;
+    });
+
+    html += '</div>';
+    card.innerHTML = html;
+    container.appendChild(card);
   });
 
-  // Show/hide nav buttons
-  document.getElementById('prev-btn').disabled = state.currentQuestion === 0;
-
-  const isLast = state.currentQuestion === total - 1;
-  document.getElementById('next-btn').classList.toggle('section-hidden', isLast);
-  document.getElementById('submit-btn').classList.toggle('section-hidden', !isLast);
-
-  // Update dots
-  updateQuestionDots();
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function selectOption(label) {
-  state.answers[state.currentQuestion] = label;
-  renderQuestion();
-}
+function selectOption(questionIndex, label) {
+  state.answers[questionIndex] = label;
 
-function nextQuestion() {
-  if (state.currentQuestion < QUESTIONS.length - 1) {
-    state.currentQuestion++;
-    renderQuestion();
-  }
-}
-
-function prevQuestion() {
-  if (state.currentQuestion > 0) {
-    state.currentQuestion--;
-    renderQuestion();
-  }
-}
-
-// Question dots
-function buildQuestionDots() {
-  const container = document.getElementById('question-dots');
-  container.innerHTML = '';
-  QUESTIONS.forEach((_, i) => {
-    const dot = document.createElement('button');
-    dot.className = 'w-3 h-3 rounded-full bg-gray-300 transition-all duration-200';
-    dot.onclick = () => {
-      state.currentQuestion = i;
-      renderQuestion();
-    };
-    container.appendChild(dot);
-  });
-}
-
-function updateQuestionDots() {
-  const dots = document.getElementById('question-dots').children;
-  for (let i = 0; i < dots.length; i++) {
-    let cls = 'w-3 h-3 rounded-full transition-all duration-200 ';
-    if (i === state.currentQuestion) {
-      cls += 'bg-saffron-500 scale-125';
-    } else if (state.answers[i] !== undefined) {
-      cls += 'bg-saffron-300';
+  // Update visual state for this question's options
+  const optionsContainer = document.getElementById(`options-${questionIndex}`);
+  const cards = optionsContainer.querySelectorAll('.option-card');
+  cards.forEach(card => {
+    const cardLabel = card.dataset.label;
+    const badge = document.getElementById(`badge-${questionIndex}-${cardLabel}`);
+    if (cardLabel === label) {
+      card.className = 'option-card cursor-pointer border-2 selected border-saffron-400 bg-saffron-50 rounded-xl p-3.5 flex items-center gap-3';
+      badge.className = 'flex-shrink-0 w-9 h-9 rounded-full bg-saffron-500 text-white flex items-center justify-center text-sm font-bold';
     } else {
-      cls += 'bg-gray-300';
+      card.className = 'option-card cursor-pointer border-2 border-gray-200 hover:border-saffron-300 bg-white rounded-xl p-3.5 flex items-center gap-3';
+      badge.className = 'flex-shrink-0 w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-sm font-bold';
     }
-    dots[i].className = cls;
-  }
+  });
 }
 
 // ============================================================
@@ -272,12 +227,17 @@ async function submitQuiz() {
   // Check all questions answered
   const unanswered = QUESTIONS.filter((_, i) => state.answers[i] === undefined);
   if (unanswered.length > 0) {
-    const count = unanswered.length;
-    alert(`Please answer all questions before submitting. You have ${count} unanswered question${count > 1 ? 's' : ''}.`);
-    // Jump to first unanswered
+    // Highlight unanswered questions and scroll to the first one
     const firstUnanswered = QUESTIONS.findIndex((_, i) => state.answers[i] === undefined);
-    state.currentQuestion = firstUnanswered;
-    renderQuestion();
+    QUESTIONS.forEach((_, i) => {
+      const card = document.getElementById(`question-card-${i}`);
+      if (state.answers[i] === undefined) {
+        card.classList.add('ring-2', 'ring-red-400');
+      } else {
+        card.classList.remove('ring-2', 'ring-red-400');
+      }
+    });
+    document.getElementById(`question-card-${firstUnanswered}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
 

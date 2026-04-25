@@ -31,11 +31,6 @@
 </head>
 <body class="min-h-screen bg-gradient-to-br from-saffron-50 via-orange-50 to-amber-50">
 
-  <!-- Progress Bar (visible during quiz) -->
-  <div id="progress-container" class="fixed top-0 left-0 w-full h-1.5 bg-saffron-100 z-50 section-hidden">
-    <div id="progress-bar" class="h-full bg-gradient-to-r from-saffron-400 to-saffron-600 transition-all duration-500 ease-out rounded-r-full" style="width: 0%"></div>
-  </div>
-
   <div class="max-w-2xl mx-auto px-4 py-8 sm:py-12">
 
     <!-- ==================== INTRO SECTION ==================== -->
@@ -73,49 +68,19 @@
 
     <!-- ==================== QUIZ SECTION ==================== -->
     <div id="quiz-section" class="section-hidden">
-      <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-        <!-- Question counter -->
-        <div class="flex justify-between items-center mb-6">
-          <span id="question-counter" class="text-sm font-medium text-gray-400">Question 1 of 10</span>
-          <span id="question-score-preview" class="text-sm text-gray-400"></span>
-        </div>
+      <!-- All questions rendered here -->
+      <div id="all-questions-container" class="space-y-6"></div>
 
-        <!-- Question text -->
-        <h2 id="question-text" class="text-xl sm:text-2xl font-semibold text-gray-800 mb-6 leading-relaxed"></h2>
-
-        <!-- Options -->
-        <div id="options-container" class="space-y-3 stagger-children"></div>
-
-        <!-- Navigation -->
-        <div class="flex justify-between items-center mt-8">
-          <button
-            id="prev-btn"
-            onclick="prevQuestion()"
-            class="px-5 py-2.5 text-gray-500 hover:text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            ← Back
-          </button>
-
-          <button
-            id="next-btn"
-            onclick="nextQuestion()"
-            class="px-6 py-2.5 bg-saffron-500 text-white font-semibold rounded-xl hover:bg-saffron-600 transform hover:scale-[1.02] transition-all shadow-md disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            Next →
-          </button>
-
-          <button
-            id="submit-btn"
-            onclick="submitQuiz()"
-            class="px-6 py-2.5 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transform hover:scale-[1.02] transition-all shadow-md section-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Submit Quiz
-          </button>
-        </div>
+      <!-- Submit button at the bottom -->
+      <div class="mt-8 text-center">
+        <button
+          id="submit-btn"
+          onclick="submitQuiz()"
+          class="px-8 py-3 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transform hover:scale-[1.02] transition-all shadow-md text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Submit Quiz
+        </button>
       </div>
-
-      <!-- Question dots navigation -->
-      <div class="flex justify-center gap-2 mt-4" id="question-dots"></div>
     </div>
 
     <!-- ==================== LOADING SECTION ==================== -->
