@@ -4,118 +4,14 @@
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzdpo8xEP4CiKWuZzqT3bW5nPST-X3B6F4b_Pl5n9UlzVbNCkdZ9Xm2uMXDda9mkV-4/exec';
 
 // ============================================================
-// QUIZ QUESTIONS — Replace these with your actual questions
-// Correct answers are stored ONLY in the Google Sheet's AnswerKey tab
-// ============================================================
-const QUESTIONS = [
-  {
-    id: 1,
-    text: "How many chapters are in the Bhagavad Gita?",
-    options: [
-      { label: "A", text: "14" },
-      { label: "B", text: "18" },
-      { label: "C", text: "21" },
-      { label: "D", text: "16" }
-    ]
-  },
-  {
-    id: 2,
-    text: "Who narrated the Bhagavad Gita to Arjuna?",
-    options: [
-      { label: "A", text: "Vyasa" },
-      { label: "B", text: "Sanjaya" },
-      { label: "C", text: "Krishna" },
-      { label: "D", text: "Bhishma" }
-    ]
-  },
-  {
-    id: 3,
-    text: "On which battlefield was the Bhagavad Gita spoken?",
-    options: [
-      { label: "A", text: "Hastinapura" },
-      { label: "B", text: "Indraprastha" },
-      { label: "C", text: "Kurukshetra" },
-      { label: "D", text: "Mathura" }
-    ]
-  },
-  {
-    id: 4,
-    text: "What is the first chapter of the Bhagavad Gita called?",
-    options: [
-      { label: "A", text: "Sankhya Yoga" },
-      { label: "B", text: "Arjuna Vishada Yoga" },
-      { label: "C", text: "Karma Yoga" },
-      { label: "D", text: "Dhyana Yoga" }
-    ]
-  },
-  {
-    id: 5,
-    text: "Which Yoga does Chapter 2 of the Gita primarily discuss?",
-    options: [
-      { label: "A", text: "Bhakti Yoga" },
-      { label: "B", text: "Karma Yoga" },
-      { label: "C", text: "Sankhya Yoga" },
-      { label: "D", text: "Raja Yoga" }
-    ]
-  },
-  {
-    id: 6,
-    text: "What does Krishna say about the soul (Atman) in Chapter 2?",
-    options: [
-      { label: "A", text: "It can be destroyed by weapons" },
-      { label: "B", text: "It is born and dies repeatedly" },
-      { label: "C", text: "It is eternal and cannot be destroyed" },
-      { label: "D", text: "It exists only in living beings" }
-    ]
-  },
-  {
-    id: 7,
-    text: "What relationship is Arjuna to the Pandavas?",
-    options: [
-      { label: "A", text: "Eldest brother" },
-      { label: "B", text: "Youngest brother" },
-      { label: "C", text: "Third brother" },
-      { label: "D", text: "Cousin" }
-    ]
-  },
-  {
-    id: 8,
-    text: "Who is the charioteer of Arjuna in the Mahabharata war?",
-    options: [
-      { label: "A", text: "Bhima" },
-      { label: "B", text: "Drona" },
-      { label: "C", text: "Krishna" },
-      { label: "D", text: "Karna" }
-    ]
-  },
-  {
-    id: 9,
-    text: "The Bhagavad Gita is part of which larger epic?",
-    options: [
-      { label: "A", text: "Ramayana" },
-      { label: "B", text: "Mahabharata" },
-      { label: "C", text: "Vishnu Purana" },
-      { label: "D", text: "Upanishads" }
-    ]
-  },
-  {
-    id: 10,
-    text: "What is the total number of shlokas (verses) in the Bhagavad Gita?",
-    options: [
-      { label: "A", text: "500" },
-      { label: "B", text: "600" },
-      { label: "C", text: "700" },
-      { label: "D", text: "800" }
-    ]
-  }
-];
-
-// ============================================================
 // STATE
 // ============================================================
+let QUESTIONS = []; // Loaded from Google Sheet on page load
+
 const state = {
   studentName: '',
   answers: {},  // { 0: "A", 1: "C", ... }
+  questionsLoaded: false,
 };
 
 // ============================================================
@@ -129,9 +25,48 @@ function showSection(sectionId) {
 }
 
 // ============================================================
+// LOAD QUESTIONS FROM GOOGLE SHEET
+// ============================================================
+async function loadQuestions() {
+  const startBtn = document.getElementById('start-btn');
+  const quizInfo = document.getElementById('quiz-info');
+
+  startBtn.disabled = true;
+  startBtn.textContent = 'Loading questions...';
+
+  try {
+    const response = await fetch(`${APPS_SCRIPT_URL}?action=questions`, {
+      redirect: 'follow'
+    });
+    const data = await response.json();
+
+    if (data.questions && data.questions.length > 0) {
+      QUESTIONS = data.questions;
+      state.questionsLoaded = true;
+      startBtn.disabled = false;
+      startBtn.textContent = 'Start Quiz';
+      quizInfo.textContent = `${QUESTIONS.length} questions • Multiple choice`;
+    } else {
+      startBtn.textContent = 'No questions available';
+      quizInfo.textContent = 'The quiz has not been set up yet.';
+    }
+  } catch (err) {
+    startBtn.textContent = 'Failed to load — tap to retry';
+    quizInfo.textContent = 'Could not connect to the server.';
+    startBtn.disabled = false;
+    startBtn.onclick = () => {
+      startBtn.onclick = () => startQuiz();
+      loadQuestions();
+    };
+  }
+}
+
+// ============================================================
 // INTRO / START
 // ============================================================
 function startQuiz() {
+  if (!state.questionsLoaded || QUESTIONS.length === 0) return;
+
   const nameInput = document.getElementById('student-name');
   const name = nameInput.value.trim();
 
@@ -170,7 +105,6 @@ function renderAllQuestions() {
     card.style.animationDelay = `${i * 0.05}s`;
     card.id = `question-card-${i}`;
 
-    // Question header + text
     let html = `
       <div class="flex items-start gap-3 mb-5">
         <span class="flex-shrink-0 w-8 h-8 rounded-full bg-saffron-100 text-saffron-700 flex items-center justify-center text-sm font-bold">${i + 1}</span>
@@ -197,14 +131,12 @@ function renderAllQuestions() {
     container.appendChild(card);
   });
 
-  // Scroll to top
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function selectOption(questionIndex, label) {
   state.answers[questionIndex] = label;
 
-  // Update visual state for this question's options
   const optionsContainer = document.getElementById(`options-${questionIndex}`);
   const cards = optionsContainer.querySelectorAll('.option-card');
   cards.forEach(card => {
@@ -218,16 +150,17 @@ function selectOption(questionIndex, label) {
       badge.className = 'flex-shrink-0 w-9 h-9 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-sm font-bold';
     }
   });
+
+  // Clear red ring if it was highlighted as unanswered
+  document.getElementById(`question-card-${questionIndex}`).classList.remove('ring-2', 'ring-red-400');
 }
 
 // ============================================================
 // SUBMIT
 // ============================================================
 async function submitQuiz() {
-  // Check all questions answered
   const unanswered = QUESTIONS.filter((_, i) => state.answers[i] === undefined);
   if (unanswered.length > 0) {
-    // Highlight unanswered questions and scroll to the first one
     const firstUnanswered = QUESTIONS.findIndex((_, i) => state.answers[i] === undefined);
     QUESTIONS.forEach((_, i) => {
       const card = document.getElementById(`question-card-${i}`);
@@ -241,12 +174,10 @@ async function submitQuiz() {
     return;
   }
 
-  // Disable submit button
   const submitBtn = document.getElementById('submit-btn');
   submitBtn.disabled = true;
   submitBtn.textContent = 'Submitting...';
 
-  // Build answers array
   const answers = QUESTIONS.map((_, i) => state.answers[i]);
 
   showSection('loading-section');
@@ -264,14 +195,9 @@ async function submitQuiz() {
 
     const result = await response.json();
 
-    if (result.success || result.alreadySubmitted) {
-      // Save to localStorage
-      localStorage.setItem('quizSubmitted', JSON.stringify({
-        name: state.studentName,
-        submitted: true
-      }));
-      renderResults(result);
-    } else if (result.error === 'duplicate') {
+    if (result.success || result.alreadySubmitted || result.error === 'duplicate') {
+      // Use questions from response if available (for results breakdown)
+      if (result.questions) QUESTIONS = result.questions;
       localStorage.setItem('quizSubmitted', JSON.stringify({
         name: state.studentName,
         submitted: true
@@ -297,16 +223,22 @@ async function submitQuiz() {
 function renderResults(data) {
   showSection('results-section');
 
+  const totalQ = data.totalQuestions || QUESTIONS.length || 10;
+
   // Score
   const scoreEl = document.getElementById('result-score');
   const score = data.score || 0;
   scoreEl.textContent = score;
 
+  // Update the /total display
+  document.getElementById('result-total').textContent = `/${totalQ}`;
+
   // Color code
+  const pct = score / totalQ;
   scoreEl.className = 'text-6xl font-bold animate-count-up ';
-  if (score >= 8) {
+  if (pct >= 0.8) {
     scoreEl.className += 'score-high';
-  } else if (score >= 5) {
+  } else if (pct >= 0.5) {
     scoreEl.className += 'score-mid';
   } else {
     scoreEl.className += 'score-low';
@@ -314,13 +246,13 @@ function renderResults(data) {
 
   // Message
   const msgEl = document.getElementById('result-message');
-  if (score === 10) {
+  if (score === totalQ) {
     msgEl.textContent = 'Perfect score! Outstanding!';
     msgEl.className = 'text-lg mt-3 font-medium text-green-600';
-  } else if (score >= 8) {
+  } else if (pct >= 0.8) {
     msgEl.textContent = 'Excellent work!';
     msgEl.className = 'text-lg mt-3 font-medium text-green-600';
-  } else if (score >= 5) {
+  } else if (pct >= 0.5) {
     msgEl.textContent = 'Good effort! Keep studying.';
     msgEl.className = 'text-lg mt-3 font-medium text-yellow-600';
   } else {
@@ -335,8 +267,9 @@ function renderResults(data) {
   // Distribution chart
   renderDistribution(data.distribution || []);
 
-  // Per-question breakdown
-  renderBreakdown(data);
+  // Per-question breakdown — use questions from response if available
+  const questions = data.questions || QUESTIONS;
+  renderBreakdown(data, questions);
 }
 
 function renderDistribution(distribution) {
@@ -344,6 +277,10 @@ function renderDistribution(distribution) {
   container.innerHTML = '';
 
   const maxCount = Math.max(...distribution, 1);
+
+  // Also render score labels
+  const labelsEl = document.getElementById('distribution-labels');
+  labelsEl.innerHTML = '';
 
   distribution.forEach((count, score) => {
     const barWrapper = document.createElement('div');
@@ -360,10 +297,11 @@ function renderDistribution(distribution) {
     bar.style.minHeight = count > 0 ? '4px' : '0';
     bar.style.animationDelay = `${score * 0.05}s`;
 
-    // Color based on score range
-    if (score >= 8) {
+    const totalQ = distribution.length - 1;
+    const scorePct = score / totalQ;
+    if (scorePct >= 0.8) {
       bar.classList.add('bg-green-400');
-    } else if (score >= 5) {
+    } else if (scorePct >= 0.5) {
       bar.classList.add('bg-yellow-400');
     } else {
       bar.classList.add('bg-red-300');
@@ -372,10 +310,15 @@ function renderDistribution(distribution) {
     barWrapper.appendChild(countLabel);
     barWrapper.appendChild(bar);
     container.appendChild(barWrapper);
+
+    // Add label
+    const label = document.createElement('span');
+    label.textContent = score;
+    labelsEl.appendChild(label);
   });
 }
 
-function renderBreakdown(data) {
+function renderBreakdown(data, questions) {
   const container = document.getElementById('question-breakdown');
   container.innerHTML = '';
 
@@ -383,19 +326,17 @@ function renderBreakdown(data) {
   const correct = data.correctAnswers || [];
   const perQuestion = data.perQuestion || [];
 
-  QUESTIONS.forEach((q, i) => {
+  questions.forEach((q, i) => {
     const studentAnswer = answers[i] || '—';
     const correctAnswer = correct[i] || '?';
     const isCorrect = studentAnswer === correctAnswer;
     const pctCorrect = Math.round((perQuestion[i] || 0) * 100);
 
-    // Find the text for the student's answer and correct answer
     const studentOptionText = q.options.find(o => o.label === studentAnswer)?.text || studentAnswer;
     const correctOptionText = q.options.find(o => o.label === correctAnswer)?.text || correctAnswer;
 
     const div = document.createElement('div');
-    div.className = `rounded-xl border-2 p-4 animate-fade-in ${isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
-      }`;
+    div.className = `rounded-xl border-2 p-4 animate-fade-in ${isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`;
     div.style.animationDelay = `${i * 0.05}s`;
 
     div.innerHTML = `
@@ -413,8 +354,7 @@ function renderBreakdown(data) {
       </div>
       <div class="flex items-center gap-2">
         <div class="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
-          <div class="h-full rounded-full animate-width-grow ${pctCorrect >= 70 ? 'bg-green-400' : pctCorrect >= 40 ? 'bg-yellow-400' : 'bg-red-400'
-      }" style="width: ${pctCorrect}%; animation-delay: ${i * 0.05 + 0.3}s;"></div>
+          <div class="h-full rounded-full animate-width-grow ${pctCorrect >= 70 ? 'bg-green-400' : pctCorrect >= 40 ? 'bg-yellow-400' : 'bg-red-400'}" style="width: ${pctCorrect}%; animation-delay: ${i * 0.05 + 0.3}s;"></div>
         </div>
         <span class="text-xs text-gray-500 w-12 text-right">${pctCorrect}% correct</span>
       </div>
@@ -427,40 +367,42 @@ function renderBreakdown(data) {
 // ============================================================
 // CHECK FOR RETURNING STUDENT (localStorage)
 // ============================================================
-(function checkReturningStudent() {
+(function init() {
   const saved = localStorage.getItem('quizSubmitted');
-  if (!saved) return;
 
-  try {
-    const { name, submitted } = JSON.parse(saved);
-    if (!submitted || !name) return;
+  if (saved) {
+    try {
+      const { name, submitted } = JSON.parse(saved);
+      if (submitted && name) {
+        state.studentName = name;
+        showSection('loading-section');
 
-    // If the Apps Script URL isn't configured yet, skip
-    if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_DEPLOYMENT_URL_HERE') return;
-
-    // Show loading and fetch their results
-    state.studentName = name;
-    showSection('loading-section');
-
-    fetch(`${APPS_SCRIPT_URL}?name=${encodeURIComponent(name)}`, {
-      redirect: 'follow'
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (data.found) {
-          renderResults(data);
-        } else {
-          // Name not found in sheet — maybe sheet was reset
-          localStorage.removeItem('quizSubmitted');
-          showSection('intro-section');
-        }
-      })
-      .catch(() => {
-        // Network error — show intro
-        localStorage.removeItem('quizSubmitted');
-        showSection('intro-section');
-      });
-  } catch {
-    localStorage.removeItem('quizSubmitted');
+        fetch(`${APPS_SCRIPT_URL}?name=${encodeURIComponent(name)}`, {
+          redirect: 'follow'
+        })
+          .then(r => r.json())
+          .then(data => {
+            if (data.found) {
+              if (data.questions) QUESTIONS = data.questions;
+              renderResults(data);
+            } else {
+              localStorage.removeItem('quizSubmitted');
+              showSection('intro-section');
+              loadQuestions();
+            }
+          })
+          .catch(() => {
+            localStorage.removeItem('quizSubmitted');
+            showSection('intro-section');
+            loadQuestions();
+          });
+        return;
+      }
+    } catch {
+      localStorage.removeItem('quizSubmitted');
+    }
   }
+
+  // No returning student — load questions for new quiz
+  loadQuestions();
 })();

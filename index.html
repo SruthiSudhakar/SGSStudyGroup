@@ -62,7 +62,7 @@
           </button>
         </div>
 
-        <p class="text-gray-400 text-sm mt-6">10 questions • Multiple choice</p>
+        <p id="quiz-info" class="text-gray-400 text-sm mt-6">Loading...</p>
       </div>
     </div>
 
@@ -100,7 +100,7 @@
         <p class="text-gray-500 text-sm mb-1">Your Score</p>
         <div class="flex items-baseline justify-center gap-1">
           <span id="result-score" class="text-6xl font-bold animate-count-up">0</span>
-          <span class="text-2xl text-gray-400 font-light">/10</span>
+          <span id="result-total" class="text-2xl text-gray-400 font-light">/10</span>
         </div>
         <p id="result-message" class="text-lg mt-3 font-medium"></p>
       </div>
@@ -122,10 +122,7 @@
         <!-- Distribution Chart -->
         <h4 class="text-sm font-medium text-gray-500 mb-3">Score Distribution</h4>
         <div class="flex items-end justify-between gap-1 h-32 px-2" id="distribution-chart"></div>
-        <div class="flex justify-between text-xs text-gray-400 px-2 mt-1">
-          <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span>
-          <span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
-        </div>
+        <div class="flex justify-between text-xs text-gray-400 px-2 mt-1" id="distribution-labels"></div>
       </div>
 
       <!-- Per-Question Breakdown -->
