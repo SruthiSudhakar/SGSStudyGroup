@@ -5,8 +5,9 @@
 // 1. Create a Google Sheet with THREE tabs:
 //
 //    "Questions" tab (columns):
-//    Question | Option A | Option B | Option C | Option D
+//    Question | Option A | Option B | Option C | Option D | Option E | ... up to Option J
 //    e.g.: "How many chapters in the Gita?" | "14" | "18" | "21" | "16"
+//    Each question can have 1-10 options. Leave extra columns blank.
 //
 //    "AnswerKey" tab (columns):
 //    Question | Answer
@@ -148,21 +149,28 @@ function doGet(e) {
 function getQuestions(ss) {
   var sheet = ss.getSheetByName("Questions");
   var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
   if (lastRow < 2) return [];
 
-  var data = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
+  // Read up to 11 columns (1 question + up to 10 options)
+  var numCols = Math.min(lastCol, 11);
+  var data = sheet.getRange(2, 1, lastRow - 1, numCols).getValues();
+  var labels = ["A","B","C","D","E","F","G","H","I","J"];
+
   return data
     .filter(function(row) { return row[0].toString().trim() !== ""; })
     .map(function(row, i) {
+      var options = [];
+      for (var c = 1; c < numCols; c++) {
+        var text = row[c].toString().trim();
+        if (text !== "") {
+          options.push({ label: labels[c - 1], text: text });
+        }
+      }
       return {
         id: i + 1,
         text: row[0].toString().trim(),
-        options: [
-          { label: "A", text: row[1].toString().trim() },
-          { label: "B", text: row[2].toString().trim() },
-          { label: "C", text: row[3].toString().trim() },
-          { label: "D", text: row[4].toString().trim() }
-        ]
+        options: options
       };
     });
 }
