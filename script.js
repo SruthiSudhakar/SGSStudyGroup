@@ -70,7 +70,8 @@ function startQuiz() {
   const nameInput = document.getElementById('student-name');
   const name = nameInput.value.trim();
 
-  if (!name) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!name || !emailRegex.test(name)) {
     document.getElementById('name-error').classList.remove('hidden');
     nameInput.classList.add('border-red-400');
     nameInput.focus();
@@ -299,10 +300,10 @@ function renderResults(data) {
     msgEl.textContent = 'Excellent work!';
     msgEl.className = 'text-lg mt-3 font-medium text-green-600';
   } else if (pct >= 0.5) {
-    msgEl.textContent = 'Good effort! Keep studying.';
+    msgEl.textContent = 'Good effort!';
     msgEl.className = 'text-lg mt-3 font-medium text-yellow-600';
   } else {
-    msgEl.textContent = 'Keep practicing — you\'ll get there!';
+    msgEl.textContent = 'Keep practicing!';
     msgEl.className = 'text-lg mt-3 font-medium text-red-500';
   }
 
