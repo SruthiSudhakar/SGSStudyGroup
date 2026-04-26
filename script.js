@@ -1,7 +1,7 @@
 // ============================================================
 // CONFIGURATION — Update this after deploying your Apps Script
 // ============================================================
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby1n6TA_JHJYp56nGufz5CrdVJIwC3juZgBk_shUTPeuyJxxOngjUGk_DaFAf1BOHY_/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw7IsziV1fGAUKi-wqggy_EuO9_7dPifktn3jLeNMwAqh2rafhK6Ev9reAS-lETyDpr/exec';
 
 // ============================================================
 // STATE
