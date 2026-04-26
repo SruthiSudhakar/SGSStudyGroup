@@ -18,7 +18,7 @@ const state = {
 // SECTION MANAGEMENT
 // ============================================================
 function showSection(sectionId) {
-  ['intro-section', 'quiz-section', 'loading-section', 'results-section'].forEach(id => {
+  ['intro-section', 'quiz-section', 'loading-section', 'results-section', 'admin-section'].forEach(id => {
     document.getElementById(id).classList.add('section-hidden');
   });
   document.getElementById(sectionId).classList.remove('section-hidden');
@@ -416,9 +416,104 @@ function renderBreakdown(data, questions) {
 }
 
 // ============================================================
-// CHECK FOR RETURNING STUDENT (localStorage)
+// ADMIN VIEW
+// ============================================================
+function renderAdminResults(data) {
+  showSection('admin-section');
+
+  const totalQ = data.totalQuestions || (data.questions || []).length || 0;
+
+  document.getElementById('admin-average').textContent = (data.classAverage || 0).toFixed(1);
+  document.getElementById('admin-submissions').textContent = data.numSubmissions || 0;
+
+  // Distribution chart (reuse logic but target admin elements)
+  const chartContainer = document.getElementById('admin-distribution-chart');
+  const labelsEl = document.getElementById('admin-distribution-labels');
+  chartContainer.innerHTML = '';
+  labelsEl.innerHTML = '';
+
+  const distribution = data.distribution || [];
+  const maxCount = Math.max(...distribution, 1);
+
+  distribution.forEach((count, score) => {
+    const barWrapper = document.createElement('div');
+    barWrapper.className = 'flex-1 flex flex-col items-center justify-end h-full';
+
+    const countLabel = document.createElement('span');
+    countLabel.className = 'text-xs text-gray-500 mb-1';
+    countLabel.textContent = count > 0 ? count : '';
+
+    const bar = document.createElement('div');
+    const heightPct = maxCount > 0 ? (count / maxCount) * 100 : 0;
+    bar.className = 'w-full rounded-t-md dist-bar animate-bar-grow';
+    bar.style.height = `${heightPct}%`;
+    bar.style.minHeight = count > 0 ? '4px' : '0';
+    bar.style.animationDelay = `${score * 0.05}s`;
+
+    const scorePct = totalQ > 0 ? score / totalQ : 0;
+    if (scorePct >= 0.8) bar.classList.add('bg-green-400');
+    else if (scorePct >= 0.5) bar.classList.add('bg-yellow-400');
+    else bar.classList.add('bg-red-300');
+
+    barWrapper.appendChild(countLabel);
+    barWrapper.appendChild(bar);
+    chartContainer.appendChild(barWrapper);
+
+    const label = document.createElement('span');
+    label.textContent = score;
+    labelsEl.appendChild(label);
+  });
+
+  // Per-question breakdown (% correct only, no student answers)
+  const container = document.getElementById('admin-question-breakdown');
+  container.innerHTML = '';
+  const questions = data.questions || [];
+  const perQuestion = data.perQuestion || [];
+
+  questions.forEach((q, i) => {
+    const pctCorrect = Math.round((perQuestion[i] || 0) * 100);
+
+    const div = document.createElement('div');
+    div.className = 'rounded-xl border-2 border-gray-200 bg-white p-4 animate-fade-in';
+    div.style.animationDelay = `${i * 0.05}s`;
+
+    div.innerHTML = `
+      <p class="text-sm font-medium text-gray-800 mb-2">
+        <span class="text-gray-400">Q${i + 1}.</span> ${q.text}
+      </p>
+      <div class="flex items-center gap-2">
+        <div class="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+          <div class="h-full rounded-full animate-width-grow ${pctCorrect >= 70 ? 'bg-green-400' : pctCorrect >= 40 ? 'bg-yellow-400' : 'bg-red-400'}" style="width: ${pctCorrect}%; animation-delay: ${i * 0.05 + 0.3}s;"></div>
+        </div>
+        <span class="text-xs text-gray-500 w-16 text-right">${pctCorrect}% correct</span>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+// ============================================================
+// CHECK FOR RETURNING STUDENT / ADMIN (localStorage)
 // ============================================================
 (function init() {
+  // Check for admin mode
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('admin174935')) {
+    showSection('loading-section');
+    fetch(`${APPS_SCRIPT_URL}`, { redirect: 'follow' })
+      .then(r => r.text())
+      .then(text => JSON.parse(text))
+      .then(data => {
+        if (data.questions) QUESTIONS = data.questions;
+        renderAdminResults(data);
+      })
+      .catch(err => {
+        console.log('Admin fetch error:', err);
+        showSection('intro-section');
+      });
+    return;
+  }
+
   const saved = localStorage.getItem('quizSubmitted');
 
   if (saved) {

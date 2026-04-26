@@ -38,7 +38,7 @@
     <!-- ==================== INTRO SECTION ==================== -->
     <div id="intro-section" class="animate-fade-in-up">
       <div class="bg-white rounded-2xl shadow-lg p-8 sm:p-10 text-center">
-        <img src="logo.webp" alt="SGS Gita Foundation" class="w-28 h-28 mx-auto mb-4 rounded-full">
+        <img src="logo.webp" alt="SGS Gita Foundation" class="w-28 mx-auto mb-4">
         <h1 class="text-3xl sm:text-4xl font-bold text-saffron-800 mb-2">SGS Study Group</h1>
         <p class="text-gray-500 mb-8 text-lg">Test your knowledge</p>
 
@@ -131,6 +131,42 @@
 
       <!-- Retake message -->
       <p class="text-center text-gray-400 text-sm mt-6">Your answers have been recorded. Thank you!</p>
+    </div>
+
+    <!-- ==================== ADMIN SECTION ==================== -->
+    <div id="admin-section" class="section-hidden">
+
+      <div class="bg-white rounded-2xl shadow-lg p-8 text-center mb-6 animate-fade-in-up">
+        <img src="logo.webp" alt="SGS Gita Foundation" class="w-20 mx-auto mb-3">
+        <h1 class="text-2xl font-bold text-saffron-800">Admin Dashboard</h1>
+      </div>
+
+      <!-- Class Stats -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8 mb-6 animate-fade-in-up" style="animation-delay: 0.1s;">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Class Statistics</h3>
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div class="bg-saffron-50 rounded-xl p-4 text-center">
+            <p class="text-sm text-saffron-700">Class Average</p>
+            <p id="admin-average" class="text-3xl font-bold text-saffron-800">—</p>
+          </div>
+          <div class="bg-blue-50 rounded-xl p-4 text-center">
+            <p class="text-sm text-blue-700">Submissions</p>
+            <p id="admin-submissions" class="text-3xl font-bold text-blue-800">—</p>
+          </div>
+        </div>
+
+        <h4 class="text-sm font-medium text-gray-500 mb-3">Score Distribution</h4>
+        <div class="flex items-end justify-between gap-1 h-32 px-2" id="admin-distribution-chart"></div>
+        <div class="flex justify-between text-xs text-gray-400 px-2 mt-1" id="admin-distribution-labels"></div>
+      </div>
+
+      <!-- Per-Question Breakdown -->
+      <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8 animate-fade-in-up" style="animation-delay: 0.2s;">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Question Breakdown</h3>
+        <div id="admin-question-breakdown" class="space-y-3"></div>
+      </div>
+
+      <p class="text-center text-gray-400 text-sm mt-6">Refresh the page to update stats.</p>
     </div>
 
   </div>
