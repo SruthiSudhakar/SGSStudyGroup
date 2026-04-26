@@ -218,8 +218,54 @@ async function submitQuiz() {
 }
 
 // ============================================================
-// RESULTS
+// RESULTS (with live polling)
 // ============================================================
+let statsInterval = null;
+
+function startLiveStats() {
+  stopLiveStats();
+  statsInterval = setInterval(async () => {
+    try {
+      const response = await fetch(
+        `${APPS_SCRIPT_URL}?name=${encodeURIComponent(state.studentName)}`,
+        { redirect: 'follow' }
+      );
+      const data = await response.json();
+      if (data.found) {
+        if (data.questions) QUESTIONS = data.questions;
+        updateStats(data);
+      }
+    } catch {
+      // silently skip — will retry next interval
+    }
+  }, 15000);
+}
+
+function stopLiveStats() {
+  if (statsInterval) {
+    clearInterval(statsInterval);
+    statsInterval = null;
+  }
+}
+
+// Update only the stats sections (not the score/message which don't change)
+function updateStats(data) {
+  document.getElementById('stat-average').textContent = (data.classAverage || 0).toFixed(1);
+  document.getElementById('stat-submissions').textContent = data.numSubmissions || 0;
+  renderDistribution(data.distribution || []);
+  const questions = data.questions || QUESTIONS;
+  renderBreakdown(data, questions);
+}
+
+// Stop polling when user leaves the page
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    stopLiveStats();
+  } else if (document.getElementById('results-section') && !document.getElementById('results-section').classList.contains('section-hidden')) {
+    startLiveStats();
+  }
+});
+
 function renderResults(data) {
   showSection('results-section');
 
@@ -270,6 +316,9 @@ function renderResults(data) {
   // Per-question breakdown — use questions from response if available
   const questions = data.questions || QUESTIONS;
   renderBreakdown(data, questions);
+
+  // Start live-updating stats
+  startLiveStats();
 }
 
 function renderDistribution(distribution) {
