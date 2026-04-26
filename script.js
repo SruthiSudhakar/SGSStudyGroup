@@ -229,15 +229,16 @@ function startLiveStats() {
     try {
       const response = await fetch(
         `${APPS_SCRIPT_URL}?name=${encodeURIComponent(state.studentName)}`,
-        { redirect: 'follow' }
+        { method: 'GET', redirect: 'follow' }
       );
-      const data = await response.json();
+      const text = await response.text();
+      const data = JSON.parse(text);
       if (data.found) {
         if (data.questions) QUESTIONS = data.questions;
         updateStats(data);
       }
-    } catch {
-      // silently skip — will retry next interval
+    } catch (err) {
+      console.log('Live stats poll error:', err);
     }
   }, 15000);
 }
