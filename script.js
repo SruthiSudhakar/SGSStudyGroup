@@ -240,7 +240,7 @@ function startLiveStats() {
     } catch (err) {
       console.log('Live stats poll error:', err);
     }
-  }, 15000);
+  }, 5000);
 }
 
 function stopLiveStats() {
